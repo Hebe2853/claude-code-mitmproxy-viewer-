@@ -23,9 +23,66 @@ A tool for processing and visualizing Claude AI conversation streams captured vi
 └── 步骤5/
 ```
 
+## Prerequisites
+
+### mitmproxy Installation & Setup
+
+> **TODO:** Add mitmproxy installation and configuration instructions here.
+
+<!-- MITMPROXY SETUP START -->
+<!--
+Example sections to add:
+
+#### Installation
+
+```bash
+# macOS
+brew install mitmproxy
+
+# Linux
+pip install mitmproxy
+
+# Windows
+choco install mitmproxy
+```
+
+#### Configuration
+
+1. Start mitmproxy:
+   ```bash
+   mitmproxy
+   # or mitmweb for web UI
+   ```
+
+2. Install CA certificate (https://mitm.it)
+
+3. Configure browser/system proxy to 127.0.0.1:8080
+
+4. Add custom addon script to capture Claude API streams (TODO: provide example)
+
+#### Capturing Claude Conversations
+
+1. Start mitmproxy with your addon
+2. Use Claude AI while proxy is active
+3. Save captured streams to txt files in project folders
+-->
+<!-- MITMPROXY SETUP END -->
+
 ## Usage
 
-### Process TXT Files to JSON
+### 1. Capture Data with mitmproxy
+
+> **TODO:** Add detailed steps for capturing Claude API streams
+
+<!-- CAPTURE STEPS START -->
+<!--
+1. Start mitmproxy with Claude stream capture addon
+2. Organize captured streams into subdirectories (步骤1/, 步骤2/, etc.)
+3. Save each conversation as a separate .txt file
+-->
+<!-- CAPTURE STEPS END -->
+
+### 2. Process TXT Files to JSON
 
 ```bash
 python process.py
@@ -34,7 +91,7 @@ python process.py
 
 This processes all `.txt` files in subdirectories (步骤1-5) and creates corresponding `.json` files.
 
-### Merge JSON Files
+### 3. Merge JSON Files
 
 ```bash
 python process.py
@@ -57,7 +114,7 @@ This merges all JSON files into a single `merged.json` file with the structure:
 }
 ```
 
-### View Data
+### 4. View Data
 
 Open `viewer.html` in a browser and select `merged.json` to visualize the data.
 
