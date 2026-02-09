@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merged Data Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { background: #161b22; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #30363d; }
+        h1 { font-size: 24px; color: #58a6ff; margin-bottom: 10px; }
+        .file-upload { margin-top: 15px; padding: 15px; background: #21262d; border-radius: 6px; border: 1px dashed #30363d; }
+        .file-upload label { display: block; margin-bottom: 10px; color: #8b949e; font-size: 14px; }
+        .file-upload input[type="file"] { display: block; width: 100%; padding: 10px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; cursor: pointer; }
+        .file-upload input[type="file"]::-webkit-file-upload-button { background: #238636; border: none; color: #ffffff; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+        .file-loaded { margin-top: 10px; color: #238636; font-size: 13px; }
+        .stats { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
+        .stat { background: #21262d; padding: 8px 16px; border-radius: 6px; font-size: 14px; }
+        .stat-label { color: #8b949e; }
+        .stat-value { color: #58a6ff; font-weight: bold; }
+        .filters { background: #161b22; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #30363d; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .filter-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 14px; }
+        .filter-btn:hover { background: #30363d; }
+        .filter-btn.active { background: #1f6feb; border-color: #1f6feb; color: #ffffff; }
+        .filter-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .search-box { flex: 1; min-width: 200px; }
+        .search-box input { width: 100%; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 8px 12px; border-radius: 6px; font-size: 14px; }
+        .search-box input:focus { outline: none; border-color: #1f6feb; }
+        .search-box input:disabled { opacity: 0.5; }
+
+        /* Level 1: Key Blocks */
+        .key-blocks { display: flex; flex-direction: column; gap: 16px; }
+        .key-block { background: #161b22; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; }
+        .key-block.hidden { display: none; }
+        .key-block-header { padding: 12px 16px; background: #1f6feb; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
+        .key-block-header:hover { background: #1a66e0; }
+        .key-block-title { font-weight: 700; color: #ffffff; font-size: 15px; }
+        .key-block-info { color: #d0d7de; font-size: 12px; }
+        .key-block-toggle { color: #ffffff; transition: transform 0.2s; margin-left: auto; }
+        .key-block-toggle.expanded { transform: rotate(180deg); }
+        .key-block-content { display: none; padding: 12px; }
+        .key-block-content.expanded { display: block; }
+
+        /* Level 2: List Blocks */
+        .list-blocks { display: flex; flex-direction: column; gap: 12px; }
+        .list-block { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; overflow: hidden; }
+        .list-block.hidden { display: none; }
+        .list-block-header { padding: 10px 14px; background: #21262d; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+        .list-block-header:hover { background: #30363d; }
+        .list-block-title { font-weight: 600; color: #58a6ff; font-size: 13px; }
+        .list-block-info { color: #8b949e; font-size: 11px; }
+        .list-block-toggle { color: #8b949e; transition: transform 0.2s; margin-left: auto; }
+        .list-block-toggle.expanded { transform: rotate(180deg); }
+        .list-block-content { display: none; padding: 10px; }
+        .list-block-content.expanded { display: block; }
+
+        /* Level 3: Sublist Blocks (Entries) */
+        .sublist-blocks { display: flex; flex-direction: column; gap: 8px; }
+        .sublist-block { background: #161b22; border: 1px solid #30363d; border-radius: 4px; overflow: hidden; }
+        .sublist-block.hidden { display: none; }
+        .sublist-block-header { padding: 8px 10px; background: #0d1117; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+        .sublist-block-header:hover { background: #161b22; }
+        .sublist-type { padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+        .sublist-type.text { background: #238636; color: #ffffff; }
+        .sublist-type.thinking { background: #8957e5; color: #ffffff; }
+        .sublist-type.tool_use { background: #db6d28; color: #ffffff; }
+        .sublist-preview { flex: 1; color: #8b949e; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sublist-toggle { color: #8b949e; transition: transform 0.2s; font-size: 9px; }
+        .sublist-toggle.expanded { transform: rotate(180deg); }
+        .sublist-content { display: none; padding: 0 10px 10px; border-top: 1px solid #21262d; }
+        .sublist-content.expanded { display: block; }
+
+        .markdown-content { padding-top: 8px; color: #c9d1d9; font-size: 12px; }
+        .markdown-content p { margin-bottom: 8px; }
+        .markdown-content code { background: #0d1117; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 11px; }
+        .markdown-content pre { background: #0d1117; padding: 8px; border-radius: 4px; overflow-x: auto; margin: 8px 0; }
+        .markdown-content pre code { background: transparent; padding: 0; }
+        .json-content { padding-top: 8px; }
+        .json-viewer { background: #0d1117; padding: 8px; border-radius: 4px; overflow-x: auto; }
+        .json-viewer pre { margin: 0; font-family: monospace; font-size: 11px; line-height: 1.4; }
+        .thinking-content { padding-top: 8px; color: #a5d6ff; font-style: italic; background: #0d111733; padding: 8px; border-radius: 4px; border-left: 2px solid #8957e5; font-size: 12px; }
+        .placeholder { text-align: center; padding: 60px 40px; color: #8b949e; }
+        .placeholder-icon { font-size: 48px; margin-bottom: 16px; }
+        .empty { text-align: center; padding: 40px; color: #8b949e; }
+        .error { background: #da3633; color: #ffffff; padding: 16px; border-radius: 8px; margin: 20px 0; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0d1117; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Merged Data Viewer</h1>
+            <div class="file-upload">
+                <label for="jsonFile">Select merged.json file to view:</label>
+                <input type="file" id="jsonFile" accept=".json">
+                <div id="fileInfo" class="file-loaded"></div>
+            </div>
+            <div class="stats" id="stats"></div>
+        </header>
+
+        <div class="filters">
+            <button class="filter-btn" data-type="all" disabled>All</button>
+            <button class="filter-btn" data-type="text" disabled>Text</button>
+            <button class="filter-btn" data-type="thinking" disabled>Thinking</button>
+            <button class="filter-btn" data-type="tool_use" disabled>Tool Use</button>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search content..." disabled>
+            </div>
+        </div>
+
+        <div class="key-blocks" id="keyBlocks">
+            <div class="placeholder">
+                <div class="placeholder-icon">📁</div>
+                <div class="placeholder-text">Please select a JSON file to view its contents</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allData = {};
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true,
+            gfm: true
+        });
+
+        document.getElementById('jsonFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    allData = JSON.parse(event.target.result);
+                    const keyCount = Object.keys(allData).length;
+                    document.getElementById('fileInfo').textContent = `✓ Loaded: ${file.name} (${keyCount} keys)`;
+                    enableControls();
+                    renderKeyBlocks();
+                    updateStats();
+                } catch (error) {
+                    document.getElementById('keyBlocks').innerHTML = `<div class="error">Error parsing JSON: ${error.message}</div>`;
+                    document.getElementById('fileInfo').textContent = `✗ Error loading file`;
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        function enableControls() {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.disabled = false);
+            document.getElementById('searchInput').disabled = false;
+        }
+
+        function updateStats() {
+            let keyCount = 0, listCount = 0, totalEntries = 0;
+            let textCount = 0, thinkingCount = 0, toolUseCount = 0;
+            Object.entries(allData).forEach(([key, listOfSublists]) => {
+                keyCount++;
+                if (Array.isArray(listOfSublists)) {
+                    listOfSublists.forEach(sublist => {
+                        listCount++;
+                        if (Array.isArray(sublist)) {
+                            totalEntries += sublist.length;
+                            sublist.forEach(entry => {
+                                if (entry.type === 'text') textCount++;
+                                else if (entry.type === 'thinking') thinkingCount++;
+                                else if (entry.type === 'tool_use') toolUseCount++;
+                            });
+                        }
+                    });
+                }
+            });
+            document.getElementById('stats').innerHTML = `
+                <div class="stat"><span class="stat-label">Keys:</span> <span class="stat-value">${keyCount}</span></div>
+                <div class="stat"><span class="stat-label">Lists:</span> <span class="stat-value">${listCount}</span></div>
+                <div class="stat"><span class="stat-label">Entries:</span> <span class="stat-value">${totalEntries}</span></div>
+                <div class="stat"><span class="stat-label">Text:</span> <span class="stat-value">${textCount}</span></div>
+                <div class="stat"><span class="stat-label">Thinking:</span> <span class="stat-value">${thinkingCount}</span></div>
+                <div class="stat"><span class="stat-label">Tool Use:</span> <span class="stat-value">${toolUseCount}</span></div>
+            `;
+        }
+
+        function renderKeyBlocks() {
+            const container = document.getElementById('keyBlocks');
+            if (!allData || Object.keys(allData).length === 0) {
+                container.innerHTML = '<div class="empty">No data found</div>';
+                return;
+            }
+            let html = '';
+            Object.entries(allData).forEach(([key, listOfSublists], keyIndex) => {
+                html += createKeyBlockHTML(key, listOfSublists, keyIndex);
+            });
+            container.innerHTML = html;
+            addBlockHandlers();
+        }
+
+        function createKeyBlockHTML(key, listOfSublists, keyIndex) {
+            if (!Array.isArray(listOfSublists)) return '';
+            const totalLists = listOfSublists.length;
+            const totalEntries = listOfSublists.reduce((sum, sublist) => Array.isArray(sublist) ? sum + sublist.length : sum, 0);
+            let listBlocksHTML = listOfSublists.map((sublist, listIndex) => createListBlockHTML(sublist, listIndex)).join('');
+            return `
+                <div class="key-block" data-key="${key}">
+                    <div class="key-block-header">
+                        <span class="key-block-title">${escapeHtml(key)}</span>
+                        <span class="key-block-info">${totalLists} lists • ${totalEntries} entries</span>
+                        <span class="key-block-toggle">▼</span>
+                    </div>
+                    <div class="key-block-content">
+                        <div class="list-blocks">${listBlocksHTML}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createListBlockHTML(sublist, listIndex) {
+            if (!Array.isArray(sublist)) return '';
+            const entryCount = sublist.length;
+            const filteredEntries = filterEntries(sublist);
+            if (filteredEntries.length === 0) {
+                return `<div class="list-block hidden" data-list-index="${listIndex}"></div>`;
+            }
+            let sublistBlocksHTML = filteredEntries.map((entry, entryIndex) => createSublistBlockHTML(entry, entryIndex)).join('');
+            return `
+                <div class="list-block" data-list-index="${listIndex}">
+                    <div class="list-block-header">
+                        <span class="list-block-title">List #${listIndex + 1}</span>
+                        <span class="list-block-info">${filteredEntries.length}/${entryCount} entries</span>
+                        <span class="list-block-toggle">▼</span>
+                    </div>
+                    <div class="list-block-content">
+                        <div class="sublist-blocks">${sublistBlocksHTML}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createSublistBlockHTML(entry, entryIndex) {
+            const typeClass = entry.type || 'unknown';
+            const preview = getPreview(entry);
+            let contentHTML = '';
+            if (entry.type === 'text') {
+                contentHTML = `<div class="sublist-content markdown-content">${marked.parse(entry.content || '')}</div>`;
+            } else if (entry.type === 'thinking') {
+                contentHTML = `<div class="sublist-content thinking-content">${escapeHtml(entry.content || '')}</div>`;
+            } else if (entry.type === 'tool_use') {
+                const jsonStr = JSON.stringify(entry.delta, null, 2);
+                contentHTML = `<div class="sublist-content json-content"><div class="json-viewer"><pre><code>${escapeHtml(jsonStr)}</code></pre></div></div>`;
+            }
+            return `
+                <div class="sublist-block" data-type="${entry.type}">
+                    <div class="sublist-block-header">
+                        <span class="sublist-type ${typeClass}">${entry.type || 'unknown'}</span>
+                        <span class="sublist-preview">${preview}</span>
+                        <span class="sublist-toggle">▼</span>
+                    </div>
+                    ${contentHTML}
+                </div>
+            `;
+        }
+
+        function filterEntries(sublist) {
+            let filtered = sublist;
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(entry => entry.type === currentFilter);
+            }
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                filtered = filtered.filter(entry => {
+                    if (entry.content) return entry.content.toLowerCase().includes(query);
+                    if (entry.delta) return JSON.stringify(entry.delta).toLowerCase().includes(query);
+                    return false;
+                });
+            }
+            return filtered;
+        }
+
+        function getPreview(entry) {
+            if (entry.content) {
+                return entry.content.substring(0, 70).replace(/\n/g, ' ') + (entry.content.length > 70 ? '...' : '');
+            }
+            if (entry.delta) {
+                return JSON.stringify(entry.delta).substring(0, 70) + '...';
+            }
+            return 'No content';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function addBlockHandlers() {
+            document.querySelectorAll('.key-block-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    const toggle = header.querySelector('.key-block-toggle');
+                    content.classList.toggle('expanded');
+                    toggle.classList.toggle('expanded');
+                });
+            });
+            document.querySelectorAll('.list-block-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    const toggle = header.querySelector('.list-block-toggle');
+                    content.classList.toggle('expanded');
+                    toggle.classList.toggle('expanded');
+                });
+            });
+            document.querySelectorAll('.sublist-block-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    const toggle = header.querySelector('.sublist-toggle');
+                    content.classList.toggle('expanded');
+                    toggle.classList.toggle('expanded');
+                });
+            });
+        }
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.disabled) return;
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.type;
+                renderKeyBlocks();
+            });
+        });
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderKeyBlocks();
+        });
+
+        document.querySelector('.filter-btn[data-type="all"]').classList.add('active');
+    </script>
+</body>
+</html>
