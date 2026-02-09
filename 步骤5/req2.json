@@ -1,0 +1,13 @@
+[
+  {
+    "type": "thinking",
+    "content": "现在开始创建目录结构和文件。"
+  },
+  {
+    "type": "tool_use",
+    "delta": {
+      "type": "input_json_delta",
+      "partial_json": "{\"command\":\"mkdir -p /Users/syl/code/claude-code-demo/app/blueprints /Users/syl/code/claude-code-demo/app/services /Users/syl/code/claude-code-demo/app/utils\",\"description\":\"Create project directory structure\"}"
+    }
+  }
+]

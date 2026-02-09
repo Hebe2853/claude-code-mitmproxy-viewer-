@@ -1,0 +1,13 @@
+[
+  {
+    "type": "text",
+    "content": "Let me check for any additional files or configuration files:\n"
+  },
+  {
+    "type": "tool_use",
+    "delta": {
+      "type": "input_json_delta",
+      "partial_json": "{\"path\":\"/Users/syl/code/claude-code-demo\",\"pattern\":\"**/*\"}"
+    }
+  }
+]

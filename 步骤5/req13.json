@@ -1,0 +1,13 @@
+[
+  {
+    "type": "thinking",
+    "content": "现在运行测试来验证所有功能正常工作。"
+  },
+  {
+    "type": "tool_use",
+    "delta": {
+      "type": "input_json_delta",
+      "partial_json": "{\"command\":\"python -m pytest test_app.py -v\",\"description\":\"Run tests to verify refactored code\"}"
+    }
+  }
+]

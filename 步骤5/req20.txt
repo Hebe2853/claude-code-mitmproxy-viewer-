@@ -1,0 +1,95 @@
+POST /api/anthropic/v1/messages?beta=true HTTP/1.1
+accept: application/json
+anthropic-beta: claude-code-20250219,interleaved-thinking-2025-05-14,prompt-caching-scope-2026-01-05
+anthropic-dangerous-direct-browser-access: true
+anthropic-version: 2023-06-01
+
+content-type: application/json
+user-agent: claude-cli/2.1.31 (external, claude-vscode, agent-sdk/0.2.31)
+x-app: cli
+x-stainless-arch: arm64
+x-stainless-lang: js
+x-stainless-os: MacOS
+x-stainless-package-version: 0.70.0
+x-stainless-retry-count: 0
+x-stainless-runtime: node
+x-stainless-runtime-version: v24.3.0
+x-stainless-timeout: 3000
+Connection: keep-alive
+Host: open.bigmodel.cn
+Accept-Encoding: gzip, deflate, br, zstd
+Content-Length: 2974
+
+{"model":"glm-4.5-air","messages":[{"role":"user","content":[{"type":"text","text":"Command: python -m pytest test_app.py -v\nOutput: ============================= test session starts ==============================\nplatform darwin -- Python 3.11.13, pytest-9.0.2, pluggy-1.6.0 -- /opt/miniconda3/envs/python311/bin/python\ncachedir: .pytest_cache\nrootdir: /Users/syl/code/claude-code-demo\nplugins: anyio-4.9.0\ncollecting ... collected 10 items\n\ntest_app.py::test_service_add PASSED                                     [ 10%]\ntest_app.py::test_service_multiply PASSED                                [ 20%]\ntest_app.py::test_service_validation PASSED                              [ 30%]\ntest_app.py::test_add_api_success PASSED                                 [ 40%]\ntest_app.py::test_add_api_missing_param PASSED                           [ 50%]\ntest_app.py::test_add_api_invalid_param PASSED                           [ 60%]\ntest_app.py::test_multiply_api_success PASSED                            [ 70%]\ntest_app.py::test_multiply_api_missing_param PASSED                      [ 80%]\ntest_app.py::test_multiply_api_invalid_param PASSED                      [ 90%]\ntest_app.py::test_add_api_no_json PASSED                                 [100%]\n\n============================== 10 passed in 0.10s ==============================\n\n","cache_control":{"type":"ephemeral"}}]}],"system":[{"type":"text","text":"x-anthropic-billing-header: cc_version=2.1.31.c62; cc_entrypoint=claude-vscode;"},{"type":"text","text":"You are a Claude agent, built on Anthropic's Claude Agent SDK.","cache_control":{"type":"ephemeral"}},{"type":"text","text":"Extract any file paths that this command reads or modifies. For commands like \"git diff\" and \"cat\", include the paths of files being shown. Use paths verbatim -- don't add any slashes or try to resolve them. Do not try to infer paths that were not explicitly listed in the command output.\n\nIMPORTANT: Commands that do not display the contents of the files should not return any filepaths. For eg. \"ls\", pwd\", \"find\". Even more complicated commands that don't display the contents should not be considered: eg \"find . -type f -exec ls -la {} + | sort -k5 -nr | head -5\"\n\nFirst, determine if the command displays the contents of the files. If it does, then <is_displaying_contents> tag should be true. If it does not, then <is_displaying_contents> tag should be false.\n\nFormat your response as:\n<is_displaying_contents>\ntrue\n</is_displaying_contents>\n\n<filepaths>\npath/to/file1\npath/to/file2\n</filepaths>\n\nIf no files are read or modified, return empty filepaths tags:\n<filepaths>\n</filepaths>\n\nDo not include any other text in your response.","cache_control":{"type":"ephemeral"}}],"tools":[],"metadata":{"user_id":"user_ee020b4626dc49055a0c53279bbe0acc9cd2fc3086ab3ac72d9cc91367b27520_account__session_9a3640cd-8506-4ffc-89b1-fc053afd7e4d"},"max_tokens":32000,"temperature":1,"stream":true}
+
+HTTP/1.1 200 OK
+Date: Thu, 05 Feb 2026 09:53:00 GMT
+Content-Type: text/event-stream; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Set-Cookie: acw_tc=2760827e17702851799237195e227a919af9064d20d7a2c3ecddb215626376;path=/;HttpOnly;Max-Age=1800
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+X-LOG-ID: 20260205175259043827ec2e9a4a43
+cache-control: no-cache
+access-control-allow-origin: *
+access-control-allow-headers: *
+x-process-time: 0.0341947078704834
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+8f0
+event: message_start
+data: {"type": "message_start", "message": {"id": "msg_20260205175259043827ec2e9a4a43", "type": "message", "role": "assistant", "model": "glm-4.5-air", "content": [], "stop_reason": null, "stop_sequence": null, "usage": {"input_tokens": 0, "output_tokens": 0}}}
+
+event: ping
+data: {"type": "ping"}
+
+event: content_block_start
+data: {"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}}
+
+event: content_block_delta
+data: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": "<is_display"}}
+
+event: content_block_delta
+data: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": "ing_contents"}}
+
+event: content_block_delta
+data: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": ">\nfalse"}}
+
+event: content_block_delta
+data: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": "\n"}}
+
+event: content_block_delta
+data: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": "</is_display"}}
+
+event: content_block_delta
+data: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": "ing_contents"}}
+
+event: content_block_delta
+data: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": ">\n\n"}}
+
+event: content_block_delta
+data: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": "<filepaths"}}
+
+event: content_block_delta
+data: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": ">\n"}}
+
+event: content_block_delta
+data: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": "</filepaths"}}
+
+event: content_block_delta
+data: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": ">"}}
+
+event: content_block_stop
+data: {"type": "content_block_stop", "index": 0}
+
+event: message_delta
+data: {"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": null}, "usage": {"input_tokens": 282, "output_tokens": 40, "cache_read_input_tokens": 580, "server_tool_use": {"web_search_requests": 0}, "service_tier": "standard"}}
+
+event: message_stop
+data: {"type": "message_stop"}
+
+
+0
+

@@ -1,0 +1,13 @@
+[
+  {
+    "type": "thinking",
+    "content": "已修复 bug，现在运行测试来验证测试通过。"
+  },
+  {
+    "type": "tool_use",
+    "delta": {
+      "type": "input_json_delta",
+      "partial_json": "{\"command\":\"python -m pytest test_app.py -v\",\"description\":\"Run pytest to verify tests pass\"}"
+    }
+  }
+]

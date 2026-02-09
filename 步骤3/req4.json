@@ -1,0 +1,13 @@
+[
+  {
+    "type": "thinking",
+    "content": "pytest 没有安装。让我先安装 pytest，然后再运行测试。"
+  },
+  {
+    "type": "tool_use",
+    "delta": {
+      "type": "input_json_delta",
+      "partial_json": "{\"command\":\"pip install pytest -q && python -m pytest test_app.py -v\",\"description\":\"Install pytest and run tests\"}"
+    }
+  }
+]
