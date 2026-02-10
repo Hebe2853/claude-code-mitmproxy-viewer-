@@ -9,6 +9,7 @@
 * 工具调用链
 * 多轮交互流程
 * 错误恢复与修复策略
+![alt text](images/image.png)
 
 ---
 
