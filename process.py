@@ -108,6 +108,101 @@ def consolidate_deltas(parsed_entries: List[Dict]) -> List[Dict[str, Any]]:
 
     return result
 
+import json
+import os
+import re
+
+
+def extract_sse_to_json(txt_path):
+    """
+    从 mitmproxy 导出的 txt 中提取：
+    - messages
+    - thinking
+    - text
+    - tool_use
+
+    并保存为同名 json 文件
+    """
+
+    with open(txt_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    result = {
+        "message": [],
+        "thinking": "",
+        "text": "",
+        "tool_use": []
+    }
+
+    # -------------------------
+    # 1. 提取 messages（请求体）
+    # -------------------------
+    def extract_messages_from_text(content):
+        """
+        从 txt 中提取第一段合法 JSON，并返回其中的 messages
+        """
+        for line in content.splitlines():
+            line = line.strip()
+
+            # 跳过空行或明显不是 JSON 的行
+            if not line.startswith("{"):
+                continue
+
+            try:
+                obj = json.loads(line)
+                if "messages" in obj and "model" in obj:
+                    return obj["messages"]
+            except Exception:
+                continue
+
+        return []
+    # -------------------------
+    # 2. 提取 SSE event 数据
+    # -------------------------
+    thinking_parts = []
+    text_parts = []
+    tool_uses = []
+
+    for line in content.splitlines():
+        line = line.strip()
+
+        if not line.startswith("data:"):
+            continue
+
+        try:
+            data = json.loads(line[5:].strip())
+        except Exception:
+            continue
+
+        # thinking delta
+        if data.get("type") == "content_block_delta":
+            delta = data.get("delta", {})
+            if delta.get("type") == "thinking_delta":
+                thinking_parts.append(delta.get("thinking", ""))
+
+            if delta.get("type") == "text_delta":
+                text_parts.append(delta.get("text", ""))
+
+            if delta.get("type") == "input_json_delta":
+                try:
+                    tool_json = json.loads(delta.get("partial_json", "{}"))
+                    tool_uses.append(tool_json)
+                except Exception:
+                    pass
+
+    result["thinking"] = "".join(thinking_parts)
+    result["text"] = "".join(text_parts)
+    result["tool_use"] = tool_uses
+    result['message'] = extract_messages_from_text(content)
+
+    # -------------------------
+    # 3. 写入同名 json 文件
+    # -------------------------
+    json_path = os.path.splitext(txt_path)[0] + ".json"
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+
+    return result
 
 def process_txt_file(txt_path: Path) -> bool:
     """Process a single txt file and generate corresponding JSON.
@@ -118,29 +213,13 @@ def process_txt_file(txt_path: Path) -> bool:
     Returns:
         True if successful, False otherwise
     """
-    parsed_entries = []
-
-    try:
-        with open(txt_path, "r", encoding="utf-8") as f:
-            for line in f:
-                parsed = parse_delta_line(line)
-                if parsed:
-                    parsed_entries.append(parsed)
-    except Exception as e:
-        print(f"Error reading {txt_path}: {e}")
-        return False
-
-    if not parsed_entries:
-        print(f"No valid data found in {txt_path}")
-        return False
-
-    consolidated = consolidate_deltas(parsed_entries)
+    content = extract_sse_to_json(txt_path)
 
     # Write to JSON file with same name
     json_path = txt_path.with_suffix(".json")
     try:
         with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(consolidated, f, ensure_ascii=False, indent=2)
+            json.dump(content, f, ensure_ascii=False, indent=2)
         print(f"Created: {json_path}")
         return True
     except Exception as e:
@@ -198,13 +277,15 @@ def merge_folder_jsons(base_dir: Path, output_filename: str = "merged.json") -> 
     subdirs = [d for d in base_dir.iterdir() if d.is_dir()]
 
     for subdir in sorted(subdirs, key=natural_sort_key):
+        if "步骤" not in subdir.name:
+            continue
         print(f"\nProcessing {subdir.name}/")
         json_files = list(subdir.glob("*.json"))
         merged_data_sub = []
 
         # Sort using natural sort for proper req1, req2, ..., req10 ordering
         json_files.sort(key=natural_sort_key)
-        user_input = open(f"{subdir}/user.txt").read().strip() if (subdir / "user.txt").exists() else ""
+        user_input = str(subdir).split("/")[-1]  # Fallback to folder name if user.txt not found
         for json_file in json_files:
             try:
                 with open(json_file, "r", encoding="utf-8") as f:
@@ -235,6 +316,91 @@ def merge_folder_jsons(base_dir: Path, output_filename: str = "merged.json") -> 
         return False
 
 
+def aggregate_tools(base_dir: Path, output_file: str = "tools.json") -> List[Dict[str, Any]]:
+    """Traverse folders starting with '步骤', read req*.txt files, and aggregate tools.
+
+    Reads all txt files starting with 'req' in folders starting with '步骤',
+    extracts JSON data containing model/messages/tools fields, and aggregates
+    all unique tools into a deduplicated list. Writes the result to tools.json.
+
+    Args:
+        base_dir: Base directory containing '步骤*' folders
+        output_file: Output filename for the aggregated tools (default: "tools.json")
+
+    Returns:
+        List of unique tool dictionaries
+    """
+    tools_dict = {}  # Use dict for deduplication by tool name
+
+    # Get all folders starting with '步骤'
+    step_folders = [d for d in base_dir.iterdir() if d.is_dir() and d.name.startswith("步骤")]
+
+    # Sort folders naturally
+    step_folders.sort(key=natural_sort_key)
+
+    for folder in step_folders:
+        print(f"\nProcessing {folder.name}/")
+
+        # Find all txt files starting with 'req'
+        req_files = [f for f in folder.glob("req*.txt")]
+        req_files.sort(key=natural_sort_key)
+
+        for req_file in req_files:
+            print(f"  Reading: {req_file.name}")
+            try:
+                with open(req_file, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+
+                        # Try to parse as JSON
+                        try:
+                            data = json.loads(line)
+
+                            # Check if this is a valid request with model, messages, tools
+                            if isinstance(data, dict) and "model" in data and "messages" in data:
+                                tools = data.get("tools", [])
+                                if isinstance(tools, list):
+                                    for tool in tools:
+                                        if isinstance(tool, dict) and "name" in tool:
+                                            tool_name = tool["name"]
+                                            # Deduplicate by tool name
+                                            if tool_name not in tools_dict:
+                                                tools_dict[tool_name] = tool
+                                                print(f"    Added tool: {tool_name}")
+                                            else:
+                                                print(f"    Skipped duplicate tool: {tool_name}")
+                        except json.JSONDecodeError:
+                            # Skip lines that are not valid JSON
+                            continue
+
+            except Exception as e:
+                print(f"  Error reading {req_file.name}: {e}")
+                continue
+
+    # Convert dict values to list
+    unique_tools = list(tools_dict.values())
+
+    # Sort by tool name for consistent output
+    unique_tools.sort(key=lambda t: t.get("name", ""))
+
+    print(f"\n" + "=" * 50)
+    print(f"Total unique tools found: {len(unique_tools)}")
+    print("=" * 50)
+
+    # Write to tools.json
+    output_path = base_dir / output_file
+    try:
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(unique_tools, f, ensure_ascii=False, indent=2)
+        print(f"\nCreated: {output_path}")
+    except Exception as e:
+        print(f"Error writing {output_path}: {e}")
+
+    return unique_tools
+
+
 def main():
     """Main entry point."""
     script_dir = Path(__file__).parent
@@ -243,9 +409,10 @@ def main():
     print("Available operations:")
     print("1. Convert txt files to JSON")
     print("2. Merge all JSON files in subfolders")
+    print("3. Aggregate tools from req*.txt files")
     print("=" * 50)
 
-    choice = input("Select operation (1/2): ").strip()
+    choice = input("Select operation (1/2/3): ").strip()
 
     if choice == "1":
         print(f"\nProcessing txt files in: {base_dir}")
@@ -271,6 +438,19 @@ def main():
             output_name += ".json"
 
         merge_folder_jsons(base_dir, output_name)
+
+    elif choice == "3":
+        print(f"\nAggregating tools from: {base_dir}")
+        print("=" * 50)
+
+        output_name = input("\nOutput filename (default: tools.json): ").strip()
+        if not output_name:
+            output_name = "tools.json"
+
+        if not output_name.endswith(".json"):
+            output_name += ".json"
+
+        aggregate_tools(base_dir, output_file=output_name)
 
     else:
         print("Invalid choice.")

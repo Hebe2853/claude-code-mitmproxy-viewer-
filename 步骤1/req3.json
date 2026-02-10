@@ -1,13 +1,24 @@
-[
-  {
-    "type": "text",
-    "content": "I'll explore the codebase structure of `/Users/syl/code/claude-code-demo` thoroughly to provide you with a comprehensive overview.\n"
-  },
-  {
-    "type": "tool_use",
-    "delta": {
-      "type": "input_json_delta",
-      "partial_json": "{\"command\":\"find /Users/syl/code/claude-code-demo -type f -o -type d | grep -v \\\"^/Users/syl/code/claude-code-demo$\\\" | sort\",\"description\":\"List all files and directories in the project\"}"
+{
+  "message": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Explore the codebase structure of /Users/code/claude-code-demo. List all files and directories, and provide a comprehensive overview of the project structure. Use thorough exploration level.",
+          "cache_control": {
+            "type": "ephemeral"
+          }
+        }
+      ]
     }
-  }
-]
+  ],
+  "thinking": "",
+  "text": "I'll explore the codebase structure of `/Users/syl/code/claude-code-demo` thoroughly to provide you with a comprehensive overview.\n",
+  "tool_use": [
+    {
+      "command": "find /Users/code/claude-code-demo -type f -o -type d | grep -v \"^/Users/code/claude-code-demo$\" | sort",
+      "description": "List all files and directories in the project"
+    }
+  ]
+}

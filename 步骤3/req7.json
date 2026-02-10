@@ -1,6 +1,19 @@
-[
-  {
-    "type": "text",
-    "content": "<is_displaying_contents>\ntrue\n</is_displaying_contents>\n\n<filepaths>\ntest_app.py\n</filepaths>"
-  }
-]
+{
+  "message": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Command: pip install pytest -q && python -m pytest test_app.py -v\nOutput: ============================= test session starts ==============================\nplatform darwin -- Python 3.11.13, pytest-9.0.2, pluggy-1.6.0 -- /opt/miniconda3/envs/python311/bin/python\ncachedir: .pytest_cache\nrootdir: /Users/code/claude-code-demo\nplugins: anyio-4.9.0\ncollecting ... collected 1 item\n\ntest_app.py::test_add PASSED                                             [100%]\n\n============================== 1 passed in 0.01s ===============================\n\n",
+          "cache_control": {
+            "type": "ephemeral"
+          }
+        }
+      ]
+    }
+  ],
+  "thinking": "",
+  "text": "<is_displaying_contents>\ntrue\n</is_displaying_contents>\n\n<filepaths>\ntest_app.py\n</filepaths>",
+  "tool_use": []
+}

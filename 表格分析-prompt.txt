@@ -1,0 +1,125 @@
+任务：
+读取 merged.json 文件中的步骤数据，解析其中的 message、thinking、text、tool_use 信息，并生成结构化分析表格，最终输出 Excel 和 Markdown 两种格式。
+
+一、输入数据结构说明
+merged.json 的结构如下：
+
+{
+"步骤1": [
+{
+"message": [...],
+"thinking": "...",
+"text": "...",
+"tool_use": [...]
+},
+...
+],
+"步骤2": [...]
+}
+
+其中每一项表示一次模型交互。
+
+二、需要生成的表格结构
+
+每一行表示一次交互（一个 step 内的一条记录），字段如下：
+
+| step | turn_index | role | user_text | assistant_text | thinking | tool_count | tool_names | raw_tool_json |
+| ---- | ---------- | ---- | --------- | -------------- | -------- | ---------- | ---------- | ------------- |
+
+字段定义：
+
+step
+步骤名称，例如：步骤1
+
+turn_index
+该步骤中的序号，从0开始
+
+role
+当前 message 中的主要角色（user 或 assistant）
+
+user_text
+提取 user 的纯文本内容（如果 content 为数组，需要拼接所有 text 字段）
+
+assistant_text
+text 字段中的内容
+
+thinking
+thinking 字段中的内容
+
+tool_count
+tool_use 的数量
+
+tool_names
+所有 tool 的名称或 subagent_type或对应dict的第一个key，使用逗号分隔
+
+raw_tool_json
+tool_use 原始 JSON 字符串（便于后续分析）
+
+三、实现要求
+
+1. 使用 Python 实现。
+
+2. 输入文件：
+   merged.json
+
+3. 输出文件：
+   analysis.xlsx
+   analysis.md
+
+4. 技术要求：
+
+   * 使用 pandas 构建表格
+   * 使用 openpyxl 写入 Excel
+   * Markdown 使用 pandas 的 to_markdown 或手动生成
+
+四、处理细节规则
+
+1. message 可能是：
+
+   * 简单字符串
+   * 数组结构（需要提取 text 字段）
+
+2. 如果某字段不存在：
+
+   * 用空字符串填充
+
+3. 保证 Excel 和 Markdown 内容一致。
+
+五、输出示例
+
+Markdown 表格示例：
+
+| step | turn_index | role      | user_text | assistant_text | tool_count |
+| ---- | ---------- | --------- | --------- | -------------- | ---------- |
+| 步骤1  | 0          | user      | foo       |                | 0          |
+| 步骤1  | 1          | assistant | 请分析这个项目结构 | 我来探索项目结构       | 1          |
+
+六、代码结构要求
+
+生成一个完整可运行的 Python 脚本：
+
+analyze.py
+
+要求：
+
+* main 函数入口
+* 可直接运行：
+  python analyze.py
+* 在当前目录生成：
+  analysis.xlsx
+  analysis.md
+
+七、附加功能（如果实现简单）
+
+1. 在 Excel 中：
+
+   * 自动设置列宽
+   * 首行加粗
+
+2. 在 Markdown 中：
+
+   * 添加标题：
+
+     # Claude Code 交互分析表
+
+直接实现完整 Python 脚本。

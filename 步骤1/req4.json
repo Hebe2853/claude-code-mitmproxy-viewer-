@@ -1,6 +1,19 @@
-[
-  {
-    "type": "text",
-    "content": "<is_displaying_contents>\nfalse\n</is_displaying_contents>\n\n<filepaths>\n</filepaths>"
-  }
-]
+{
+  "message": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Command: find /Users/code/claude-code-demo -type f -o -type d | grep -v \"^/Users/code/claude-code-demo$\" | sort\nOutput: /Users/code/claude-code-demo/.vscode\n/Users/code/claude-code-demo/.vscode/settings.json\n/Users/code/claude-code-demo/app.py\n/Users/code/claude-code-demo/private-doc\n/Users/code/claude-code-demo/private-doc/分析步骤设计.md\n/Users/code/claude-code-demo/requirementx.txt\n/Users/code/claude-code-demo/test_app.py\n/Users/code/claude-code-demo/utils.py\n\n",
+          "cache_control": {
+            "type": "ephemeral"
+          }
+        }
+      ]
+    }
+  ],
+  "thinking": "",
+  "text": "<is_displaying_contents>\nfalse\n</is_displaying_contents>\n\n<filepaths>\n</filepaths>",
+  "tool_use": []
+}

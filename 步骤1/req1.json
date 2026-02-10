@@ -1,0 +1,11 @@
+{
+  "message": [
+    {
+      "role": "user",
+      "content": "foo"
+    }
+  ],
+  "thinking": "",
+  "text": "",
+  "tool_use": []
+}
